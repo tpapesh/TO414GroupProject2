@@ -1,0 +1,56 @@
+---
+title: "GroupProject2"
+author: "Tommy Papesh, Jasper Drumm, Aidan Hatzer, Jonah Cuenca, and Leif Gullstad"
+date: "2022-10-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Explanation of Data and Business Case
+
+## Data Reading and Cleaning
+```{r}
+nfl <- read.csv("NFL.csv", stringsAsFactors = TRUE)
+# get rid of player name since that is basically like the id column we usually get rid of
+# also get rid of the Drafted Information since that will impact our model and is a post-condition of the response variable
+nfl$Drafted..tm.rnd.yr. <- NULL
+nfl$Player <- NULL
+
+# Need to decide how we want to handle NA values - average them out or make them 0 (since NA might mean they didn't participate in that combine event)
+summary(nfl)
+```
+
+
+## Logistics Model Function
+```{r}
+LM_func <- function(cluster_norm) {
+  library(class)
+  library(caret)
+  library(gmodels)
+  set.seed(12345)
+  cluster_sample <- sample(1:nrow(cluster_norm), floor(0.3 * nrow(cluster_norm))) # 30% size of cluster_norm to use for sample
+  cluster_test <- cluster_norm[-cluster_sample,] # 70% for test
+  cluster_train <- cluster_norm[cluster_sample,]
+  
+  cluster_model <- glm(Drafted ~ . , data = cluster_train, family = "binomial")
+  
+  glm_Prediction <- predict(cluster_model, newdata = cluster_test, type = "response")
+  glm_Prediction <- ifelse(glm_Prediction < 0.5, 0, 1)
+  summary(glm_Prediction)
+
+  CrossTable(x = cluster_test$Drafted, y = glm_Prediction, prop.chisq = F)
+  confusionMatrix(as.factor(cluster_test$Drafted), as.factor(glm_Prediction))
+  # return(as.factor(glm_Prediction))
+}
+```
+
+## Running Preliminary Logistic Regression
+```{r}
+# NOT SURE IF WE NEED TO NORMALIZE OR NOT??? - Why do we normally do that, I can't remember
+# Error being thrown due to the schools, but hopefully we can figure it out together and ask for help if not...
+LM_func(nfl)
+```
+
