@@ -11,6 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Explanation of Data and Business Case
 
+```{}
+The Data set we chose to use is called “NFL.CSV,” which details the players and player
+characteristics of everyone who entered the 2009 through 2019 NFL Drafts. Our business
+question that we hope to answer with our model is: Should a Junior in college declare early for
+the NFL draft or stay for their senior year? We believe there are many questions that we can
+build off of this main question such as figuring out which round the player will likely be selected
+in and what their first contract may look like. Our model hopes to consider specific predictor
+variables, such as age, school, height, weight, position, and combine performance to predict if a
+player is likely to get drafted (our response variable) and help them decide on their future.
+
+```
+
+
 ## Data Reading and Cleaning
 ```{r}
 nfl <- read.csv("NFL.csv", stringsAsFactors = TRUE)
