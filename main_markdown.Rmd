@@ -18,8 +18,19 @@ nfl <- read.csv("NFL.csv", stringsAsFactors = TRUE)
 # also get rid of the Drafted Information since that will impact our model and is a post-condition of the response variable
 nfl$Drafted..tm.rnd.yr. <- NULL
 nfl$Player <- NULL
+nfl$School <- NULL # removing because there is too many low frequency unique values to run logistic regression
 
-# Need to decide how we want to handle NA values - average them out or make them 0 (since NA might mean they didn't participate in that combine event)
+# Set Response variable to 0 and 1
+nfl$Drafted <- ifelse(nfl$Drafted == "Yes", 1, 0)
+
+# Changing NA variables to the mean
+nfl$Age <- ifelse(is.na(nfl$Age), mean(nfl$Age, na.rm = T), nfl$Age)
+nfl$Sprint_40yd <- ifelse(is.na(nfl$Sprint_40yd), mean(nfl$Sprint_40yd, na.rm = T), nfl$Sprint_40yd)
+nfl$Bench_Press_Reps <- ifelse(is.na(nfl$Bench_Press_Reps), mean(nfl$Bench_Press_Reps, na.rm = T), nfl$Bench_Press_Reps)
+nfl$Vertical_Jump <- ifelse(is.na(nfl$Vertical_Jump), mean(nfl$Vertical_Jump, na.rm = T), nfl$Vertical_Jump)
+nfl$Broad_Jump <- ifelse(is.na(nfl$Broad_Jump), mean(nfl$Broad_Jump, na.rm = T), nfl$Broad_Jump)
+nfl$Agility_3cone <- ifelse(is.na(nfl$Agility_3cone), mean(nfl$Agility_3cone, na.rm = T), nfl$Agility_3cone)
+nfl$Shuttle <- ifelse(is.na(nfl$Shuttle), mean(nfl$Shuttle, na.rm = T), nfl$Shuttle)
 summary(nfl)
 ```
 
@@ -43,14 +54,36 @@ LM_func <- function(cluster_norm) {
 
   CrossTable(x = cluster_test$Drafted, y = glm_Prediction, prop.chisq = F)
   confusionMatrix(as.factor(cluster_test$Drafted), as.factor(glm_Prediction))
-  # return(as.factor(glm_Prediction))
 }
+```
+
+## Normalization Function
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+
+## Normalize numeric rows
+```{r}
+nfl_norm <- nfl
+nfl_norm$Age <- normalize(nfl$Age)
+nfl_norm$Height <- normalize(nfl$Height)
+nfl_norm$Weight <- normalize(nfl$Weight)
+nfl_norm$Sprint_40yd <- normalize(nfl$Sprint_40yd)
+nfl_norm$Vertical_Jump <- normalize(nfl$Vertical_Jump)
+nfl_norm$Bench_Press_Reps <- normalize(nfl$Bench_Press_Reps)
+nfl_norm$Broad_Jump <- normalize(nfl$Broad_Jump)
+nfl_norm$Agility_3cone <- normalize(nfl$Agility_3cone)
+nfl_norm$Shuttle <- normalize(nfl$Shuttle)
+nfl_norm$BMI <- normalize(nfl$BMI)
+nfl_norm$Year <- normalize(nfl$Year)
 ```
 
 ## Running Preliminary Logistic Regression
 ```{r}
-# NOT SURE IF WE NEED TO NORMALIZE OR NOT??? - Why do we normally do that, I can't remember
-# Error being thrown due to the schools, but hopefully we can figure it out together and ask for help if not...
-LM_func(nfl)
+# Error being thrown due to the schools, but hopefully we can figure it out together and ask for help if not.
+LM_func(nfl_norm)
 ```
 
