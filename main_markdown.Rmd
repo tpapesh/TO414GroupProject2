@@ -67,6 +67,27 @@ LM_func <- function(cluster_norm) {
 }
 ```
 
+## ANN function
+```{r}
+
+ANN_func <- function(cluster_norm) {
+  # cluster_norm$cluster <- NULL
+  set.seed(12345)
+  cluster_sample <- sample(1:nrow(cluster_norm), floor(0.3 * nrow(cluster_norm))) # 30% size of cluster_norm to use for sample
+  cluster_test <- cluster_norm[-cluster_sample,] # 70% for test
+  cluster_train <- cluster_norm[cluster_sample,]
+  
+  library(caret)
+  library(neuralnet)
+  
+  func_model <- neuralnet(formula = Drafted~., data = cluster_train, hidden = 2)
+  
+  func_prediction <- predict(func_model, newdata = cluster_test, type = "response")
+  func_prediction <- ifelse(func_prediction < 0.5, 0, 1)
+  confusionMatrix(as.factor(cluster_test$Drafted), as.factor(func_prediction))
+}
+```
+
 ## Normalization Function
 ```{r}
 normalize <- function(x) {
@@ -95,5 +116,6 @@ nfl_norm$Year <- normalize(nfl$Year)
 ```{r}
 # Error being thrown due to the schools, but hopefully we can figure it out together and ask for help if not.
 LM_func(nfl_norm)
+# ANN_func(nfl_norm)
 ```
 
