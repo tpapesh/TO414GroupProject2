@@ -1,0 +1,180 @@
+---
+title: "Project 2 Markdown"
+author: "Tommy Papesh"
+date: "2022-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Explanation of Data and Business Case
+The Data set we chose to use is called “NFL.CSV,” which details the players and player
+characteristics of everyone who entered the 2009 through 2019 NFL Drafts. Our business
+question that we hope to answer with our model is: Should a Junior in college declare early for
+the NFL draft or stay for their senior year? We believe there are many questions that we can
+build off of this main question such as figuring out which round the player will likely be selected
+in and what their first contract may look like. Our model hopes to consider specific predictor
+variables, such as age, school, height, weight, position, and combine performance to predict if a
+player is likely to get drafted (our response variable) and help them decide on their future.
+
+## Normalization Function
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+## Data Reading and Cleaning
+```{r}
+nfl <- read.csv("NFL.csv", stringsAsFactors = TRUE)
+# get rid of player name since that is basically like the id column we usually get rid of
+# also get rid of the Drafted Information since that will impact our model and is a post-condition of the response variable
+nfl$Drafted..tm.rnd.yr. <- NULL
+nfl$Player <- NULL
+nfl$School <- NULL # removing because there is too many low frequency unique values to run logistic regression
+
+# Set Response variable to 0 and 1
+nfl$Drafted <- ifelse(nfl$Drafted == "Yes", 1, 0)
+
+# Changing NA variables to the mean
+nfl$Age <- ifelse(is.na(nfl$Age), mean(nfl$Age, na.rm = T), nfl$Age)
+nfl$Sprint_40yd <- ifelse(is.na(nfl$Sprint_40yd), mean(nfl$Sprint_40yd, na.rm = T), nfl$Sprint_40yd)
+nfl$Bench_Press_Reps <- ifelse(is.na(nfl$Bench_Press_Reps), mean(nfl$Bench_Press_Reps, na.rm = T), nfl$Bench_Press_Reps)
+nfl$Vertical_Jump <- ifelse(is.na(nfl$Vertical_Jump), mean(nfl$Vertical_Jump, na.rm = T), nfl$Vertical_Jump)
+nfl$Broad_Jump <- ifelse(is.na(nfl$Broad_Jump), mean(nfl$Broad_Jump, na.rm = T), nfl$Broad_Jump)
+nfl$Agility_3cone <- ifelse(is.na(nfl$Agility_3cone), mean(nfl$Agility_3cone, na.rm = T), nfl$Agility_3cone)
+nfl$Shuttle <- ifelse(is.na(nfl$Shuttle), mean(nfl$Shuttle, na.rm = T), nfl$Shuttle)
+summary(nfl)
+
+# Load necessary libraries
+library(class)
+library(caret)
+library(gmodels)
+library(neuralnet)
+library(kernlab)
+library(C50)
+
+# Get the data ready for analysis
+
+# Start by normalizing 
+set.seed(12345)
+nflmm <- as.data.frame(model.matrix(~.-1,nfl))
+nfl_norm <- nflmm
+nfl_norm$Age <- normalize(nfl$Age)
+nfl_norm$Height <- normalize(nfl$Height)
+nfl_norm$Weight <- normalize(nfl$Weight)
+nfl_norm$Sprint_40yd <- normalize(nfl$Sprint_40yd)
+nfl_norm$Vertical_Jump <- normalize(nfl$Vertical_Jump)
+nfl_norm$Bench_Press_Reps <- normalize(nfl$Bench_Press_Reps)
+nfl_norm$Broad_Jump <- normalize(nfl$Broad_Jump)
+nfl_norm$Agility_3cone <- normalize(nfl$Agility_3cone)
+nfl_norm$Shuttle <- normalize(nfl$Shuttle)
+nfl_norm$BMI <- normalize(nfl$BMI)
+nfl_norm$Year <- normalize(nfl$Year)
+
+
+sample <- sample(1:nrow(nfl_norm), floor(0.3 * nrow(nfl_norm))) # 30% size of cluster_norm to use for sample
+nfl_test <- nfl_norm[sample,] # 30% for test
+nfl_train <- nfl_norm[-sample,]
+```
+## ANN
+```{r}
+  ANN_model <- neuralnet(formula = Drafted ~., data = nfl_train, hidden = 1)
+  ANN_pred <- predict(ANN_model, newdata = nfl_test, type = "response")
+  ANN_binary_pred <- ifelse(ANN_pred < 0.5, 0, 1)
+  summary(ANN_binary_pred)
+  summary(ANN_pred)
+  CrossTable(x = nfl_test$Drafted, y = ANN_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes')) # may have to put binary pred here
+  confusionMatrix(as.factor(nfl_test$Drafted), as.factor(ANN_binary_pred)) # may have to put binary pred here
+```
+## ANN Analysis
+
+## Logistic Regression
+```{r}
+  LM_model <- glm(Drafted ~ ., data = nfl_train, family = "binomial")
+  LM_pred <- predict(LM_model, newdata = nfl_test, type = "response")
+  LM_binary_pred <- ifelse(LM_pred < 0.5, 0, 1)
+  summary(LM_binary_pred)
+  CrossTable(x = nfl_test$Drafted, y = LM_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+  confusionMatrix(as.factor(nfl_test$Drafted), as.factor(LM_binary_pred)) 
+```
+## Logistic Regression Analysis
+
+## KNN
+```{r}
+#labels must be the same length so get them from KNN_norm
+KNN_test_labels <- nfl_norm[sample, "Drafted"]
+KNN_train_labels <- nfl_norm[-sample, "Drafted"]
+
+
+#this KNN as a whole tends to have yyes = 0, so I set the k-val arbitrarily to a low number to be able to predict 1's
+k_val <- sqrt(nrow(nfl_train))
+
+# don't want to make yyes null in tele norm since we need it for SVM and decision trees
+KNN_train <- nfl_train
+KNN_test <- nfl_test
+
+KNN_train$Drafted <- NULL
+KNN_test$Drafted <- NULL
+
+KNN_pred <- knn(train = KNN_train, test = KNN_test, cl = KNN_train_labels, k = k_val)
+summary(KNN_pred)
+
+CrossTable(x = KNN_test_labels, y = KNN_pred, prop.chisq = FALSE)
+confusionMatrix(as.factor(KNN_test_labels), as.factor(KNN_pred))
+
+```
+## KNN Analysis
+
+## SVM
+```{r}
+#Training a model on the data
+SVM_classifier <- ksvm(as.factor(Drafted) ~ ., data = nfl_train,
+                        kernel = "rbfdot")
+
+# look at basic information about the model
+SVM_classifier
+# Evaluating model performance 
+# predictions on testing dataset
+SVM_pred <- predict(SVM_classifier, nfl_test)
+summary(SVM_pred)
+
+table(SVM_pred, nfl_test$Drafted)
+
+# This just tells us more about the success of the model we built, I think
+# look only at agreement vs. non-agreement
+# construct a vector of TRUE/FALSE indicating correct/incorrect predictions
+agreement <- SVM_pred == nfl_test$Drafted
+table(agreement)
+prop.table(table(agreement))
+
+CrossTable(x = nfl_test$Drafted, y = SVM_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl_test$Drafted), as.factor(SVM_pred))
+```
+## SVM Analysis
+
+## Decision Trees
+```{r}
+#Training a model on the data ----
+# build the simplest decision tree
+DT_model <- C5.0(as.factor(Drafted) ~ ., data = nfl_train)
+
+# display simple facts about the tree
+DT_model
+
+# display detailed information about the tree
+summary(DT_model)
+
+plot(DT_model)
+
+DT_pred <- predict(DT_model, nfl_test)
+summary(DT_pred)
+
+# cross tabulation of predicted versus actual classes
+CrossTable(x = nfl_test$Drafted, y = DT_pred,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl_test$Drafted), as.factor(DT_pred))
+```
+## Decision Tree Analysis
