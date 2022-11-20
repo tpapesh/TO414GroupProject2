@@ -182,6 +182,46 @@ confusionMatrix(as.factor(nfl_test$Drafted), as.factor(DT_pred))
 
 ## Second Level Decision Tree
 
+```{r}
+
+Combined_prediction <- data.frame(ANN_pred, LM_pred, KNN_pred, SVM_pred, DT_pred, nfl_test$Drafted)
+
+set.seed(12345)
+
+combined_data <- sample(1:nrow(Combined_prediction), floor(.7 *nrow(Combined_prediction)))
+
+combined_nfl_test <- Combined_prediction[-combined_data,]
+combined_nfl_train <- Combined_prediction[combined_data,]
+
+str(combined_nfl_test)
+
+
+
+Second_level_DT_model <- C5.0(as.factor(nfl_test.Drafted) ~ ., data = combined_nfl_train)
+
+Second_level_DT_pred <- predict(Second_level_DT_model, combined_nfl_test)
+
+  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_pred))
+  
+plot(Second_level_DT_model)
+
+```
+
+## Second Level DT with error costs
+
+```{r}
+
+error_cost <- matrix(c(0, 2, 1, 0), nrow = 2)
+
+Second_level_DT_model_with_costs <- C5.0(as.factor(nfl_test.Drafted) ~ ., data = combined_nfl_train, costs = error_cost)
+
+Second_level_DT_with_costs_pred <- predict(Second_level_DT_model_with_costs, combined_nfl_test)
+
+  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_with_costs_pred))
+  
+
+```
+
 
 ## Second Level Decision Tree Analysis
-Compare to individual models basically - it hsould hopefully be better
+After making our second level Decision Tree Model, we noticed that we had a lot of false positives, which is very concerning when deciding whether or not a college football player should declare for the NFL draft. In order to emphasize the fact that it is much more "costly" to the player to declare for the draft and to not get drafted than to stay another year, we decided to add an error cost matrix to the model, making sure this risk or "cost" is taken into account. By adding this cost matrix we were able to reduce the amount of false positives and would help aid athletes in the draft decision process, with lower risk of having them declare for the draft and not get drafted.
