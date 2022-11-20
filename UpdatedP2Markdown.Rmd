@@ -178,3 +178,10 @@ CrossTable(x = nfl_test$Drafted, y = DT_pred,
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(DT_pred))
 ```
 ## Decision Tree Analysis
+
+
+## Second Level Decision Tree
+
+
+## Second Level Decision Tree Analysis
+Compare to individual models basically - it hsould hopefully be better
