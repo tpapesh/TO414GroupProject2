@@ -1,6 +1,6 @@
 ---
 title: "Project 2 Markdown"
-author: "Tommy Papesh"
+author: "Tommy Papesh, Aidan Hatzer, Jonah Cuenca, Jasper Drumm, Leif Gullstad"
 date: "2022-11-10"
 output: html_document
 ---
