@@ -88,6 +88,31 @@ nfl_train <- nfl_norm[-sample,]
   CrossTable(x = nfl_test$Drafted, y = ANN_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes')) # may have to put binary pred here
   confusionMatrix(as.factor(nfl_test$Drafted), as.factor(ANN_binary_pred)) # may have to put binary pred here
 ```
+## ANN with Training
+```{r, cache=T}
+## Customizing the tuning process ----
+# use trainControl() to alter resampling strategy
+ctrl <- trainControl(method = "cv", number = 10,
+                     selectionFunction = "oneSE")
+
+# use expand.grid() to create grid of tuning parameters
+# grid <- expand.grid(.model = "tree",
+#                     .trials = c(1, 5, 10, 15, 20, 25, 30, 35),
+#                     .winnow = "FALSE")
+
+# look at the result of expand.grid()
+grid
+
+# customize train() with the control list and grid of parameters 
+set.seed(300)
+m <- train(as.factor(Drafted) ~ ., data = nfl, method = "nnet",
+           metric = "Kappa",
+           trControl = ctrl)
+m
+p <- predict(m, nfl)
+table(p, nfl$Drafted)
+```
+
 ## ANN Analysis
 
 ## Logistic Regression
@@ -99,10 +124,36 @@ nfl_train <- nfl_norm[-sample,]
   CrossTable(x = nfl_test$Drafted, y = LM_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
   confusionMatrix(as.factor(nfl_test$Drafted), as.factor(LM_binary_pred)) 
 ```
+## Logistic Regression with Training
+```{r, cache=T}
+## Customizing the tuning process ----
+# use trainControl() to alter resampling strategy
+ctrl <- trainControl(method = "cv", number = 10,
+                     selectionFunction = "oneSE", search = "random")
+
+# use expand.grid() to create grid of tuning parameters
+# grid <- expand.grid(.model = "tree",
+#                     .trials = c(1, 5, 10, 15, 20, 25, 30, 35),
+#                     .winnow = "FALSE")
+
+# look at the result of expand.grid()
+grid
+
+# customize train() with the control list and grid of parameters 
+set.seed(300)
+m <- train(as.factor(Drafted) ~ ., data = nfl, method = "glmnet",
+           metric = "Kappa",
+           trControl = ctrl,
+           family = "binomial")
+m
+p <- predict(m, nfl)
+table(p, nfl$Drafted)
+```
+
 ## Logistic Regression Analysis
 
 ## KNN
-```{r}
+```{r, cache=T}
 #labels must be the same length so get them from KNN_norm
 KNN_test_labels <- nfl_norm[sample, "Drafted"]
 KNN_train_labels <- nfl_norm[-sample, "Drafted"]
@@ -125,6 +176,21 @@ CrossTable(x = KNN_test_labels, y = KNN_pred, prop.chisq = FALSE)
 confusionMatrix(as.factor(KNN_test_labels), as.factor(KNN_pred))
 
 ```
+## KNN with Training
+```{r}
+library(caret)
+## Creating a simple tuned model ----
+set.seed(300)
+training_control <- trainControl(method = "cv",
+                                 number = 4,
+                                  selectionFunction = "oneSE")
+grid <- expand.grid(k = c(1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50))
+knn <- train(as.factor(Drafted) ~ ., data = nfl, method = "knn", metric="Accuracy", trControl = training_control, tuneGrid = grid)
+knn
+knn_pred <- predict(knn, nfl)
+table(knn_pred, nfl$Drafted)
+```
+
 ## KNN Analysis
 
 ## SVM
@@ -152,6 +218,32 @@ prop.table(table(agreement))
 CrossTable(x = nfl_test$Drafted, y = SVM_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(SVM_pred))
 ```
+## SVM with Training
+```{r, cache=T}
+ctrl <- trainControl(method = "cv", number = 10)
+set.seed(1234)
+
+svm_Linear <- train(as.factor(Drafted) ~., data = nfl, method = "svmRadial",
+                    trControl=ctrl,
+                    preProcess = c("center", "scale"),
+                    tuneLength = 10)
+# 
+# # use expand.grid() to create grid of tuning parameters
+# grid <- expand.grid(C = c(0,0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,5))
+
+# look at the result of expand.grid()
+# grid
+
+# customize train() with the control list and grid of parameters 
+m <- train(as.factor(Drafted) ~ ., data = nfl, method = "svmRadial",
+           metric = "Kappa",
+           trControl = ctrl)
+m
+p <- predict(m, nfl)
+table(p, nfl$Drafted)
+
+```
+
 ## SVM Analysis
 
 ## Decision Trees
@@ -177,6 +269,32 @@ CrossTable(x = nfl_test$Drafted, y = DT_pred,
            dnn = c('actual yes', 'predicted yes'))
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(DT_pred))
 ```
+## Decision Tree with Training
+```{r, cache=T}
+## Customizing the tuning process ----
+# use trainControl() to alter resampling strategy
+ctrl <- trainControl(method = "cv", number = 10,
+                     selectionFunction = "oneSE")
+
+# use expand.grid() to create grid of tuning parameters
+grid <- expand.grid(.model = "tree",
+                    .trials = c(1, 5, 10, 15, 20, 25, 30, 35),
+                    .winnow = "FALSE")
+
+# look at the result of expand.grid()
+grid
+
+# customize train() with the control list and grid of parameters 
+set.seed(300)
+m <- train(as.factor(Drafted) ~ ., data = nfl, method = "C5.0",
+           metric = "Kappa",
+           trControl = ctrl,
+           tuneGrid = grid)
+m
+p <- predict(m, nfl)
+table(p, nfl$Drafted)
+```
+
 ## Decision Tree Analysis
 
 
