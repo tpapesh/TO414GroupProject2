@@ -80,13 +80,13 @@ nfl_train <- nfl_norm[-sample,]
 ```
 ## ANN
 ```{r}
-  ANN_model <- neuralnet(formula = Drafted ~., data = nfl_train, hidden = 1)
-  ANN_pred <- predict(ANN_model, newdata = nfl_test, type = "response")
-  ANN_binary_pred <- ifelse(ANN_pred < 0.5, 0, 1)
-  summary(ANN_binary_pred)
-  summary(ANN_pred)
-  CrossTable(x = nfl_test$Drafted, y = ANN_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes')) # may have to put binary pred here
-  confusionMatrix(as.factor(nfl_test$Drafted), as.factor(ANN_binary_pred)) # may have to put binary pred here
+  # ANN_model <- neuralnet(formula = Drafted ~., data = nfl_train, hidden = 1)
+  # ANN_pred <- predict(ANN_model, newdata = nfl_test, type = "response")
+  # ANN_binary_pred <- ifelse(ANN_pred < 0.5, 0, 1)
+  # summary(ANN_binary_pred)
+  # summary(ANN_pred)
+  # CrossTable(x = nfl_test$Drafted, y = ANN_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes')) # may have to put binary pred here
+  # confusionMatrix(as.factor(nfl_test$Drafted), as.factor(ANN_binary_pred)) # may have to put binary pred here
 ```
 ## ANN with Training
 ```{r, cache=T}
@@ -105,24 +105,25 @@ grid
 
 # customize train() with the control list and grid of parameters 
 set.seed(300)
-m <- train(as.factor(Drafted) ~ ., data = nfl, method = "nnet",
+ann_model <- train(as.factor(Drafted) ~ ., data = nfl, method = "nnet",
            metric = "Kappa",
            trControl = ctrl)
-m
-p <- predict(m, nfl)
-table(p, nfl$Drafted)
+ann_model
+ann_pred <- predict(ann_model, nfl)
+CrossTable(x = nfl$Drafted, y = ann_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl$Drafted), as.factor(ann_pred))
 ```
 
 ## ANN Analysis
 
 ## Logistic Regression
 ```{r}
-  LM_model <- glm(Drafted ~ ., data = nfl_train, family = "binomial")
-  LM_pred <- predict(LM_model, newdata = nfl_test, type = "response")
-  LM_binary_pred <- ifelse(LM_pred < 0.5, 0, 1)
-  summary(LM_binary_pred)
-  CrossTable(x = nfl_test$Drafted, y = LM_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
-  confusionMatrix(as.factor(nfl_test$Drafted), as.factor(LM_binary_pred)) 
+  # LM_model <- glm(Drafted ~ ., data = nfl_train, family = "binomial")
+  # LM_pred <- predict(LM_model, newdata = nfl_test, type = "response")
+  # LM_binary_pred <- ifelse(LM_pred < 0.5, 0, 1)
+  # summary(LM_binary_pred)
+  # CrossTable(x = nfl_test$Drafted, y = LM_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+  # confusionMatrix(as.factor(nfl_test$Drafted), as.factor(LM_binary_pred)) 
 ```
 ## Logistic Regression with Training
 ```{r, cache=T}
@@ -141,13 +142,15 @@ grid
 
 # customize train() with the control list and grid of parameters 
 set.seed(300)
-m <- train(as.factor(Drafted) ~ ., data = nfl, method = "glmnet",
+lm <- train(as.factor(Drafted) ~ ., data = nfl, method = "glmnet",
            metric = "Kappa",
            trControl = ctrl,
            family = "binomial")
-m
-p <- predict(m, nfl)
-table(p, nfl$Drafted)
+lm
+lm_pred <- predict(lm, nfl)
+table(lm_pred, nfl$Drafted)
+CrossTable(x = nfl$Drafted, y = lm_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl$Drafted), as.factor(lm_pred))
 ```
 
 ## Logistic Regression Analysis
@@ -174,7 +177,6 @@ summary(KNN_pred)
 
 CrossTable(x = KNN_test_labels, y = KNN_pred, prop.chisq = FALSE)
 confusionMatrix(as.factor(KNN_test_labels), as.factor(KNN_pred))
-
 ```
 ## KNN with Training
 ```{r}
@@ -188,7 +190,8 @@ grid <- expand.grid(k = c(1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50))
 knn <- train(as.factor(Drafted) ~ ., data = nfl, method = "knn", metric="Accuracy", trControl = training_control, tuneGrid = grid)
 knn
 knn_pred <- predict(knn, nfl)
-table(knn_pred, nfl$Drafted)
+CrossTable(x = nfl$Drafted, y = knn_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl$Drafted), as.factor(knn_pred))
 ```
 
 ## KNN Analysis
@@ -235,13 +238,13 @@ svm_Linear <- train(as.factor(Drafted) ~., data = nfl, method = "svmRadial",
 # grid
 
 # customize train() with the control list and grid of parameters 
-m <- train(as.factor(Drafted) ~ ., data = nfl, method = "svmRadial",
+svm_model <- train(as.factor(Drafted) ~ ., data = nfl, method = "svmRadial",
            metric = "Kappa",
            trControl = ctrl)
-m
-p <- predict(m, nfl)
-table(p, nfl$Drafted)
-
+svm_model
+svm_pred <- predict(svm_model, nfl)
+CrossTable(x = nfl$Drafted, y = svm_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl$Drafted), as.factor(svm_pred))
 ```
 
 ## SVM Analysis
@@ -286,13 +289,14 @@ grid
 
 # customize train() with the control list and grid of parameters 
 set.seed(300)
-m <- train(as.factor(Drafted) ~ ., data = nfl, method = "C5.0",
+dt_model <- train(as.factor(Drafted) ~ ., data = nfl, method = "C5.0",
            metric = "Kappa",
            trControl = ctrl,
            tuneGrid = grid)
-m
-p <- predict(m, nfl)
-table(p, nfl$Drafted)
+dt_model
+dt_pred <- predict(dt_model, nfl)
+CrossTable(x = nfl$Drafted, y = dt_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(nfl$Drafted), as.factor(dt_pred))
 ```
 
 ## Decision Tree Analysis
@@ -302,7 +306,7 @@ table(p, nfl$Drafted)
 
 ```{r}
 
-Combined_prediction <- data.frame(ANN_pred, LM_pred, KNN_pred, SVM_pred, DT_pred, nfl_test$Drafted)
+Combined_prediction <- data.frame(ann_pred, lm_pred, knn_pred, svm_pred, dt_pred, nfl$Drafted)
 
 set.seed(12345)
 
@@ -315,11 +319,11 @@ str(combined_nfl_test)
 
 
 
-Second_level_DT_model <- C5.0(as.factor(nfl_test.Drafted) ~ ., data = combined_nfl_train)
+Second_level_DT_model <- C5.0(as.factor(nfl.Drafted) ~ ., data = combined_nfl_train)
 
 Second_level_DT_pred <- predict(Second_level_DT_model, combined_nfl_test)
 
-  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_pred))
+  confusionMatrix(as.factor(combined_nfl_test$nfl.Drafted), as.factor(Second_level_DT_pred))
   
 plot(Second_level_DT_model)
 
@@ -331,11 +335,11 @@ plot(Second_level_DT_model)
 
 error_cost <- matrix(c(0, 2, 1, 0), nrow = 2)
 
-Second_level_DT_model_with_costs <- C5.0(as.factor(nfl_test.Drafted) ~ ., data = combined_nfl_train, costs = error_cost)
+Second_level_DT_model_with_costs <- C5.0(as.factor(nfl.Drafted) ~ ., data = combined_nfl_train, costs = error_cost)
 
 Second_level_DT_with_costs_pred <- predict(Second_level_DT_model_with_costs, combined_nfl_test)
 
-  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_with_costs_pred))
+  confusionMatrix(as.factor(combined_nfl_test$nfl.Drafted), as.factor(Second_level_DT_with_costs_pred))
   
 
 ```
