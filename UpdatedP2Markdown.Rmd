@@ -344,9 +344,47 @@ plot(Second_level_DT_model_with_costs)
 ```
 ## Hinton 
 ```{r}
-hinton_data <- read.csv("CHinton.csv")
-hinton_data <- hinton_data[3478:3478,]
-hinton_pred <- predict(Second_level_DT_model, hinton_data)
+hinton_data <- read.csv("CHinton.csv", stringsAsFactors = T)
+# get rid of player name since that is basically like the id column we usually get rid of
+# also get rid of the Drafted Information since that will impact our model and is a post-condition of the response variable
+hinton_data$Drafted..tm.rnd.yr. <- NULL
+hinton_data$Player <- NULL
+hinton_data$School <- NULL # removing because there is too many low frequency unique values to run logistic regression
+
+# Set Response variable to 0 and 1
+hinton_data$Drafted <- ifelse(hinton_data$Drafted == "Yes", 1, 0)
+
+# Changing NA variables to the mean
+hinton_data$Age <- ifelse(is.na(hinton_data$Age), mean(hinton_data$Age, na.rm = T), hinton_data$Age)
+hinton_data$Sprint_40yd <- ifelse(is.na(hinton_data$Sprint_40yd), mean(hinton_data$Sprint_40yd, na.rm = T), hinton_data$Sprint_40yd)
+hinton_data$Bench_Press_Reps <- ifelse(is.na(hinton_data$Bench_Press_Reps), mean(hinton_data$Bench_Press_Reps, na.rm = T), hinton_data$Bench_Press_Reps)
+hinton_data$Vertical_Jump <- ifelse(is.na(hinton_data$Vertical_Jump), mean(hinton_data$Vertical_Jump, na.rm = T), hinton_data$Vertical_Jump)
+hinton_data$Broad_Jump <- ifelse(is.na(hinton_data$Broad_Jump), mean(hinton_data$Broad_Jump, na.rm = T), hinton_data$Broad_Jump)
+hinton_data$Agility_3cone <- ifelse(is.na(hinton_data$Agility_3cone), mean(hinton_data$Agility_3cone, na.rm = T), hinton_data$Agility_3cone)
+hinton_data$Shuttle <- ifelse(is.na(hinton_data$Shuttle), mean(hinton_data$Shuttle, na.rm = T), hinton_data$Shuttle)
+# Get the data ready for analysis
+# Start by normalizing 
+set.seed(12345)
+hinton_datamm <- as.data.frame(model.matrix(~.-1,hinton_data))
+hinton_data_norm <- hinton_datamm
+hinton_data_norm$Age <- normalize(hinton_data$Age)
+hinton_data_norm$Height <- normalize(hinton_data$Height)
+hinton_data_norm$Weight <- normalize(hinton_data$Weight)
+hinton_data_norm$Sprint_40yd <- normalize(hinton_data$Sprint_40yd)
+hinton_data_norm$Vertical_Jump <- normalize(hinton_data$Vertical_Jump)
+hinton_data_norm$Bench_Press_Reps <- normalize(hinton_data$Bench_Press_Reps)
+hinton_data_norm$Broad_Jump <- normalize(hinton_data$Broad_Jump)
+hinton_data_norm$Agility_3cone <- normalize(hinton_data$Agility_3cone)
+hinton_data_norm$Shuttle <- normalize(hinton_data$Shuttle)
+hinton_data_norm$BMI <- normalize(hinton_data$BMI)
+hinton_data_norm$Year <- normalize(hinton_data$Year)
+
+
+
+
+hinton_data_norm <- hinton_data_norm[3478:3478,]
+hinton_data$Drafted <- ifelse(hinton_data$Drafted == "No", 0, 1)
+hinton_pred <- predict(Second_level_DT_model_with_costs, hinton_data)
 confusionMatrix(as.factor(hinton_data$Drafted), as.factor(hinton_pred)) 
 ```
 
