@@ -319,7 +319,8 @@ Second_level_DT_model <- C5.0(as.factor(nfl_test.Drafted) ~ ., data = combined_n
 
 Second_level_DT_pred <- predict(Second_level_DT_model, combined_nfl_test)
 
-  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_pred))
+CrossTable(x = combined_nfl_test$nfl_test.Drafted, y = Second_level_DT_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_pred))
   
 plot(Second_level_DT_model)
 ```
@@ -334,10 +335,16 @@ Second_level_DT_model_with_costs <- C5.0(as.factor(nfl_test.Drafted) ~ ., data =
 
 Second_level_DT_with_costs_pred <- predict(Second_level_DT_model_with_costs, combined_nfl_test)
 
-  confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_with_costs_pred))
+CrossTable(x = combined_nfl_test$nfl_test.Drafted, y = Second_level_DT_with_costs_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
+confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_level_DT_with_costs_pred))
   
-
+plot(Second_level_DT_model_with_costs)
 ```
+
+```{r}
+# Run the model on real data from the last row
+```
+
 
 
 ## Second Level Decision Tree Analysis
