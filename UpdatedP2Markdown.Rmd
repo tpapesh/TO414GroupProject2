@@ -1,7 +1,7 @@
 ---
 title: "Project 2 Markdown"
 author: "Tommy Papesh, Aidan Hatzer, Jonah Cuenca, Jasper Drumm, Leif Gullstad"
-date: "2022-11-10"
+date: "2022-12-8"
 output: html_document
 ---
 
@@ -9,14 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Explanation of Data and Business Case
-The Data set we chose to use is called “NFL.CSV,” which details the players and player
-characteristics of everyone who entered the 2009 through 2019 NFL Drafts. Our business
-question that we hope to answer with our model is: Should a Junior in college declare early for
-the NFL draft or stay for their senior year? We believe there are many questions that we can
-build off of this main question such as figuring out which round the player will likely be selected
-in and what their first contract may look like. Our model hopes to consider specific predictor
-variables, such as age, school, height, weight, position, and combine performance to predict if a
-player is likely to get drafted (our response variable) and help them decide on their future.
+The Data set we chose to use is called “NFL.CSV,” which details the players and player characteristics of everyone who entered the 2009 through 2019 NFL Drafts. Our business question that we hope to answer with our model is: Should a Junior in college declare early for the NFL draft or stay for their senior year? We believe that it is essential for college football players to enter the NFL draft at the optimal time because if they leave early and do not get drafted, they lose out on the ability to ever play college football again or re-enter another NFL draft. Our model hopes to consider specific predictor variables, such as age, height, weight, position, and combine performance to predict if a player is likely to get drafted (our response variable) and help them make a more informed decision on their future and not lose out on college eligibility.
 
 ## Normalization Function
 ```{r}
@@ -95,14 +88,6 @@ nfl_train <- nfl_norm[-sample,]
 ctrl <- trainControl(method = "cv", number = 10,
                      selectionFunction = "oneSE")
 
-# use expand.grid() to create grid of tuning parameters
-# grid <- expand.grid(.model = "tree",
-#                     .trials = c(1, 5, 10, 15, 20, 25, 30, 35),
-#                     .winnow = "FALSE")
-
-# look at the result of expand.grid()
-grid
-
 # customize train() with the control list and grid of parameters 
 set.seed(12345)
 ann_model <- train(as.factor(Drafted) ~ ., data = nfl_train, method = "nnet",
@@ -125,20 +110,14 @@ confusionMatrix(as.factor(nfl_test$Drafted), as.factor(ann_pred))
   # CrossTable(x = nfl_test$Drafted, y = LM_binary_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
   # confusionMatrix(as.factor(nfl_test$Drafted), as.factor(LM_binary_pred)) 
 ```
+
 ## Logistic Regression with Training
+
 ```{r, cache=T}
 ## Customizing the tuning process ----
 # use trainControl() to alter resampling strategy
 ctrl <- trainControl(method = "cv", number = 10,
                      selectionFunction = "oneSE", search = "random")
-
-# use expand.grid() to create grid of tuning parameters
-# grid <- expand.grid(.model = "tree",
-#                     .trials = c(1, 5, 10, 15, 20, 25, 30, 35),
-#                     .winnow = "FALSE")
-
-# look at the result of expand.grid()
-grid
 
 # customize train() with the control list and grid of parameters 
 set.seed(12345)
@@ -153,7 +132,6 @@ CrossTable(x = nfl_test$Drafted, y = lm_pred, prop.chisq = F, dnn = c('actual ye
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(lm_pred))
 ```
 
-## Logistic Regression Analysis
 
 ## KNN
 ```{r, cache=T}
@@ -178,7 +156,9 @@ confusionMatrix(as.factor(nfl_test$Drafted), as.factor(lm_pred))
 # CrossTable(x = KNN_test_labels, y = KNN_pred, prop.chisq = FALSE)
 # confusionMatrix(as.factor(KNN_test_labels), as.factor(KNN_pred))
 ```
+
 ## KNN with Training
+
 ```{r}
 library(caret)
 ## Creating a simple tuned model ----
@@ -194,9 +174,8 @@ CrossTable(x = nfl_test$Drafted, y = knn_pred, prop.chisq = F, dnn = c('actual y
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(knn_pred))
 ```
 
-## KNN Analysis
-
 ## SVM
+
 ```{r}
 # #Training a model on the data
 # SVM_classifier <- ksvm(as.factor(Drafted) ~ ., data = nfl_train,
@@ -221,16 +200,12 @@ confusionMatrix(as.factor(nfl_test$Drafted), as.factor(knn_pred))
 # CrossTable(x = nfl_test$Drafted, y = SVM_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
 # confusionMatrix(as.factor(nfl_test$Drafted), as.factor(SVM_pred))
 ```
+
 ## SVM with Training
+
 ```{r, cache=T}
 ctrl <- trainControl(method = "cv", number = 10)
 set.seed(12345)
-# 
-# # use expand.grid() to create grid of tuning parameters
-# grid <- expand.grid(C = c(0,0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,5))
-
-# look at the result of expand.grid()
-# grid
 
 # customize train() with the control list and grid of parameters 
 svm_model <- train(as.factor(Drafted) ~ ., data = nfl_train, method = "svmRadial",
@@ -242,9 +217,8 @@ CrossTable(x = nfl_test$Drafted, y = svm_pred, prop.chisq = F, dnn = c('actual y
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(svm_pred))
 ```
 
-## SVM Analysis
-
 ## Decision Trees
+
 ```{r}
 # #Training a model on the data ----
 # # build the simplest decision tree
@@ -269,6 +243,7 @@ confusionMatrix(as.factor(nfl_test$Drafted), as.factor(svm_pred))
 ```
 
 ## Decision Tree with Training
+
 ```{r, cache=T}
 ## Customizing the tuning process ----
 # use trainControl() to alter resampling strategy
@@ -294,9 +269,6 @@ dt_pred <- predict(dt_model, nfl_test)
 CrossTable(x = nfl_test$Drafted, y = dt_pred, prop.chisq = F, dnn = c('actual yes', 'predicted yes'))
 confusionMatrix(as.factor(nfl_test$Drafted), as.factor(dt_pred))
 ```
-
-## Decision Tree Analysis
-
 
 ## Second Level Decision Tree
 
@@ -342,57 +314,8 @@ confusionMatrix(as.factor(combined_nfl_test$nfl_test.Drafted), as.factor(Second_
   
 plot(Second_level_DT_model_with_costs)
 ```
-## Hinton 
-```{r}
-hinton_data <- read.csv("CHinton.csv", stringsAsFactors = T)
-# get rid of player name since that is basically like the id column we usually get rid of
-# also get rid of the Drafted Information since that will impact our model and is a post-condition of the response variable
-hinton_data$Drafted..tm.rnd.yr. <- NULL
-hinton_data$Player <- NULL
-hinton_data$School <- NULL # removing because there is too many low frequency unique values to run logistic regression
-
-# Set Response variable to 0 and 1
-hinton_data$Drafted <- ifelse(hinton_data$Drafted == "Yes", 1, 0)
-
-# Changing NA variables to the mean
-hinton_data$Age <- ifelse(is.na(hinton_data$Age), mean(hinton_data$Age, na.rm = T), hinton_data$Age)
-hinton_data$Sprint_40yd <- ifelse(is.na(hinton_data$Sprint_40yd), mean(hinton_data$Sprint_40yd, na.rm = T), hinton_data$Sprint_40yd)
-hinton_data$Bench_Press_Reps <- ifelse(is.na(hinton_data$Bench_Press_Reps), mean(hinton_data$Bench_Press_Reps, na.rm = T), hinton_data$Bench_Press_Reps)
-hinton_data$Vertical_Jump <- ifelse(is.na(hinton_data$Vertical_Jump), mean(hinton_data$Vertical_Jump, na.rm = T), hinton_data$Vertical_Jump)
-hinton_data$Broad_Jump <- ifelse(is.na(hinton_data$Broad_Jump), mean(hinton_data$Broad_Jump, na.rm = T), hinton_data$Broad_Jump)
-hinton_data$Agility_3cone <- ifelse(is.na(hinton_data$Agility_3cone), mean(hinton_data$Agility_3cone, na.rm = T), hinton_data$Agility_3cone)
-hinton_data$Shuttle <- ifelse(is.na(hinton_data$Shuttle), mean(hinton_data$Shuttle, na.rm = T), hinton_data$Shuttle)
-# Get the data ready for analysis
-# Start by normalizing 
-set.seed(12345)
-hinton_datamm <- as.data.frame(model.matrix(~.-1,hinton_data))
-hinton_data_norm <- hinton_datamm
-hinton_data_norm$Age <- normalize(hinton_data$Age)
-hinton_data_norm$Height <- normalize(hinton_data$Height)
-hinton_data_norm$Weight <- normalize(hinton_data$Weight)
-hinton_data_norm$Sprint_40yd <- normalize(hinton_data$Sprint_40yd)
-hinton_data_norm$Vertical_Jump <- normalize(hinton_data$Vertical_Jump)
-hinton_data_norm$Bench_Press_Reps <- normalize(hinton_data$Bench_Press_Reps)
-hinton_data_norm$Broad_Jump <- normalize(hinton_data$Broad_Jump)
-hinton_data_norm$Agility_3cone <- normalize(hinton_data$Agility_3cone)
-hinton_data_norm$Shuttle <- normalize(hinton_data$Shuttle)
-hinton_data_norm$BMI <- normalize(hinton_data$BMI)
-hinton_data_norm$Year <- normalize(hinton_data$Year)
-
-
-
-
-hinton_data_norm <- hinton_data_norm[3478:3478,]
-hinton_data$Drafted <- ifelse(hinton_data$Drafted == "No", 0, 1)
-hinton_pred <- predict(Second_level_DT_model_with_costs, hinton_data)
-confusionMatrix(as.factor(hinton_data$Drafted), as.factor(hinton_pred)) 
-```
-
-```{r}
-# Run the model on real data from the last row
-```
-
-
 
 ## Second Level Decision Tree Analysis
-After making our second level Decision Tree Model, we noticed that we had a lot of false positives, which is very concerning when deciding whether or not a college football player should declare for the NFL draft. In order to emphasize the fact that it is much more "costly" to the player to declare for the draft and to not get drafted than to stay another year, we decided to add an error cost matrix to the model, making sure this risk or "cost" is taken into account. By adding this cost matrix we were able to reduce the amount of false positives and would help aid athletes in the draft decision process, with lower risk of having them declare for the draft and not get drafted.
+  We began by creating 5 simple models (Logistic Regression, ANN, KNN, SVM, and Decision Tree), that each predict if a player is likely to get drafted based on combine characteristics and other physical attributes. Then we made our first second level Decision Tree Model, which had an accuracy of 82%, a kappa value of .4895, a sensitivity of .95, and a specificity of .8059. 
+  Because we recognized that it is more detrimental to a college athlete's career and education to declare to the draft and not get drafted than not declaring to the draft if they would have gotten drafted, we decided to make another second level Decision Tree including a cost matrix, which weights false positive errors more heavily. Although this new model's accuracy dropped to 78.27% and its kappa dropped to .4556, our specificity rose to .8319, which means the amount of false positives (model predicts drafted, when player actually would not be) decreased. Our final model includes our first level Decision Tree, our SVM model, and our Logistic Regression model.
+    Using our model, college football players would be able to accurately predict whether they will get drafted or not 78.27% of the time. Additionally, there is only a 16.81% chance that a college football player will not be drafted, if our model says he will be. This will help college football players because it will mitigate the losses associated with declaring for the draft too early. Some of the following losses would be: a football player could no longer play at the collegiate level after declaring for the draft, a football player may not be able to complete his degree because he lost his scholarship after declaring, he could lose out on getting drafted next year if he took the time to develop for the next draft. We believe that our model would be very useful to college football players, who currently rely on coaches, advisors, and sports analysts to determine if they should enter the draft, which are less accurate predictors than our model.
